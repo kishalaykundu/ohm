@@ -1,53 +1,64 @@
-.PHONY: all help translate test clean update compass collect rebuild
+.PHONY: all help start test add_to_group init build shell bash update purge stop
 
-# target: all - Default target. Does nothing.
+# default target. runs help command.
 all:
-	@echo "Hello $(LOGNAME), nothing to do by default"
 	@echo "Try 'make help'"
 
-# target: help - Display callable targets.
+# displays callable make targets.
 help:
-	@egrep "^# target:" [Mm]akefile
+	grep -E "^# target:" [Mm]akefile
 
-# target: test - calls the "test" django command
-test:
-	docker-compose run app python3.12 manage.py test
+# target: make start (initalizes docker daemon if not started)
+start:
+	sudo systemctl start docker
 
-# target: bash
-bash:
-	docker-compose exec app bash
+# target: make add_to_group (this checks if the docker group exists in system and if not, creates it and adds user to docker group)
+add_to_group:
+	if [ $(getent group docker) ]; then \
+		sudo groupadd docker; \
+		sudo usermod -aG docker $(USER); \
+	else \
+		sudo usermod -aG docker $(USER); \
+	fi; \
+	newgrp docker
 
-# target: test - calls the "test" django command
-shell:
-	docker-compose run app python3.12 manage.py shell_plus
+# target: make init (starts docker daemon and adds user to docker group, sequentially runs 'make init' & 'make add_to_group')
+init: start
+	make add_to_group
 
-# target: clean - remove all ".pyc" files
-clean:
-	docker-compose run app python3.12 manage.py clean_pyc
-
-# target: update - install (and update) pip requirements
-update:
-	docker-compose run app pip install -r app/requirements/dev.txt -r app/requirements/psycobuild.txt
-
-# target: collect - calls the "collectstatic" django command
-collect:
-	docker-compose run app python3.12 manage.py collectstatic --noinput
-
-# target: collect - calls the "makemigrations" django command
-migrations:
-	docker-compose run app python3.12 manage.py makemigrations
-
-# target: collect - calls the "migrate" django command
-migrate:
-	docker-compose run app python3.12 manage.py migrate
-
-# target: rebuild - clean, update, collect, then rebuild all data
-rebuild: clean update collect
-	docker-compose run app python3.12 manage.py reset_db --noinput
-	docker-compose run app python3.12 manage.py makemigrations
-	docker-compose run app python3.12 manage.py migrate
-
-# Builds the frontend
+# target: make build (uses docker,instead of docker compose to build app image)
 build:
-	rm -rf frontend/dist/*
-	docker-compose run frontend yarn build
+	docker build -t ohm_core:latest .
+
+# target: DBNAME=<dbname> DBUSER=<admin-name> DBPASS=<password> make devup (creates & runs app/db/cache in dev)
+devup:
+	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f dev.yaml up
+
+# target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devdb (creates & runs app/db/cache in dev)
+devdb:
+	docker compose db psql --dbname=$(DB) --username=$(DBUSER) --password=$(DBPASS)
+
+# target: make up (creates & runs app in production)
+up:
+	docker compose -f live.yaml up
+
+# target: make shell (enters app shell)
+shell:
+	docker compose run -rm app  /bin/bash
+
+# target: make bash (enters app shell using docker, not docker compose)
+bash:
+	docker run -i -t ohm_core:latest /bin/bash
+
+# target: make update (installs & updates pip requirements for app)
+update:
+	docker-compose run app pip install -r app/requirements/dev.txt
+
+# target: make purge (removes all images in the system including base images) [NOT RECOMMENDED - USE WITH CAUTION]
+purge:
+	docker rmi -f $(docker images -aq)
+
+# target: make stop (stops docker daemon)
+stop:
+	sudo systemctl stop docker.socket \
+	&& sudo systemctl stop docker

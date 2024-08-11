@@ -2,22 +2,22 @@
 ARG PYTHON=python:3.12-slim
 
 ############################################################################
-####                        BASE IMAGE SETUP
+####                        BASE IMAGE SETUP                            ####
 ############################################################################
 FROM ${PYTHON} AS base
 ENV PYTHONUNBUFFERED=1 \
     # prevents python creating .pyc files
     PYTHONDONTWRITEBYTECODE=1 \
     # common environment paths
-    PYSETUP_PATH=/opt/pysetup/ \
+    PYSETUP_PATH=/opt/pysetup \
     VENV_FOLDER=myenv
-ENV VENV_PATH=${PYSETUP_PATH}${VENV_FOLDER}
+ENV VENV_PATH=${PYSETUP_PATH}/${VENV_FOLDER}
 # Prepend env to path
 ENV PATH="$VENV_PATH/bin:$PATH"
 
 
 ############################################################################
-####                             BUILD STAGE
+####                             BUILD STAGE                            ####
 ############################################################################
 FROM base AS build
 ARG HOME_FOLDER=./compose/app
@@ -29,7 +29,7 @@ RUN sh ./buildpkgs.sh
 
 # Move to set up directory and install
 WORKDIR ${PYSETUP_PATH}
-COPY ${HOME_FOLDER}/requirements.txt .
+COPY ${HOME_FOLDER}/requirements requirements
 
 # create virtual env
 RUN python -m venv ${VENV_FOLDER}
@@ -37,14 +37,15 @@ RUN python -m venv ${VENV_FOLDER}
 # install packages from requirements.txt
 # NOTE: use venv path pip to install into the requisite folder
 RUN ${VENV_PATH}/bin/pip install --no-cache-dir --upgrade pip \
-    && ${VENV_PATH}/bin/pip install --no-cache-dir -r ./requirements.txt
+    && ${VENV_PATH}/bin/pip install --no-cache-dir -r requirements/dev.txt
 
 
 ############################################################################
-####                               FINAL IMAGE
+####                             FINAL IMAGE                            ####
 ############################################################################
 FROM base AS runtime
-ARG APP_FOLDER=/app \
+ARG HOME_FOLDER=./compose/app \
+    APP_FOLDER=/app \
     APP_USER=l33tuser
 
 # Copy build script for system optimized packages
@@ -71,5 +72,5 @@ COPY --chown=${APP_USER}:${APP_USER} ./app .
 # Switch to the non-root user
 USER ${APP_USER}
 
-# # Run  fastapi and
-# CMD ["fastapi", "run", "app/main.py", "--port", "80"]
+# # Run fastapi
+CMD ["fastapi", "run", "app/main.py", "--port", "8080"]

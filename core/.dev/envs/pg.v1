@@ -1,7 +1,0 @@
-# PostgreSQL
-# ------------------------------------------------------------------------------
-POSTGRES_HOST=db
-POSTGRES_PORT=5432
-POSTGRES_DB=ohm_central
-POSTGRES_USER=ohm_admin
-POSTGRES_PASSWORD=7d2b57c1-f756-4cb6-b7e1-4abcd24fec0c
