@@ -6,6 +6,9 @@ __pycache__
 *.pyo
 *.pyd
 .Python
+app.egg-info
+htmlcov
+.venv
 env
 pip-log.txt
 pip-delete-this-directory.txt
@@ -17,7 +20,7 @@ nosetests.xml
 coverage.xml
 *.cover
 *.log
-.git
+.git*
 .mypy_cache
 .pytest_cache
 .hypothesis

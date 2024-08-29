@@ -6,6 +6,7 @@
 # details.
 # set -euo pipefail
 export BUILD_DEPS="\
+        curl\
         build-essential\
         libpq-dev\
         libssl-dev\

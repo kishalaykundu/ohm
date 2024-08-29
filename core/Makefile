@@ -25,14 +25,15 @@ add_to_group:
 # target: make init (starts docker daemon and adds user to docker group, sequentially runs 'make init' & 'make add_to_group')
 init: start
 	make add_to_group
+	docker login
 
 # target: make build (uses docker,instead of docker compose to build app image)
 build:
 	docker build -t ohm_core:latest .
 
-# target: DBNAME=<dbname> DBUSER=<admin-name> DBPASS=<password> make devup (creates & runs app/db/cache in dev)
+# target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devup (creates & runs app/db/cache in dev)
 devup:
-	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f dev.yaml up
+	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f docker-compose.dev.yaml up
 
 # target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devdb (creates & runs app/db/cache in dev)
 devdb:
@@ -40,7 +41,7 @@ devdb:
 
 # target: make up (creates & runs app in production)
 up:
-	docker compose -f live.yaml up
+	docker compose -f docker-compose.yaml up
 
 # target: make shell (enters app shell)
 shell:
@@ -53,6 +54,10 @@ bash:
 # target: make update (installs & updates pip requirements for app)
 update:
 	docker-compose run app pip install -r app/requirements/dev.txt
+
+# target: make clean (stops and removes all containers)
+clean:
+	docker ps -aq | xargs docker stop | xargs docker rm
 
 # target: make purge (removes all images in the system including base images) [NOT RECOMMENDED - USE WITH CAUTION]
 purge:

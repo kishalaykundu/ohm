@@ -1,0 +1,150 @@
+#########################################################################################
+######                               IMPORTANT NOTE                                ######
+# The ohm_core app is the only app where the db-volumes and network are NOT designated as
+# 'external'.  This is because they are initialized by ohm_core.  The ohm_tenant app must
+# designate its db-volumes and network as 'external', as it is the user, not the creator.
+# Usage: DBPASSWORD=<strong password> docker compose
+#########################################################################################
+
+volumes:
+    db_admin_data:
+        name: ohm_admin_db
+        driver: local
+    db_admin_data_backups:
+        name: ohm_admin_db_backups
+        driver: local
+    # db_user_data:
+    #     name: ohm_user_db
+    #     driver: local
+    # db_user_data_backups:
+    #     name: ohm_user_db_backups
+    #     driver: local
+    # db_tenant1_data:
+    #     name: ohm_tenant1_db
+    #     driver: local
+    # db_tenant1_data_backups:
+    #     name: ohm_tenant1_db_backups
+    #     driver: local
+    # db_tenant2_data:
+    #     name: ohm_tenant2_db
+    #     driver: local
+    # db_tenant2_data_backups:
+    #     name: ohm_tenant2_db_backups
+    #     driver: local
+networks:
+    ohm_network:
+        name: ohm_nimbus
+        driver: bridge
+
+services:
+    backend:
+        build:
+            context: ./backend
+            dockerfile: compose/app/Dockerfile
+        image: 'ohm_core:${TAG-latest}'
+        depends_on:
+            - admindb
+            # - userdb
+            # - tenant1_db
+            # - tenant2_db
+            # - cache
+        volumes:
+            - ./app:/app
+        ports:
+            - "1337:8080"
+        restart: always
+        command: /start
+        networks:
+            - ohm_network
+
+    admindb:
+        build:
+            context: ./backend
+            dockerfile: compose/dev/db/Dockerfile
+        image: ohm_admin_db
+        container_name: admin_db
+        volumes:
+            - db_admin_data:/var/lib/postgresql/data
+            - db_admin_data_backups:/backups
+        environment:
+            - PGDATA=/var/lib/postgresql/data/pgdata
+            - POSTGRES_DB=${DBNAME?Variable not set}
+            - POSTGRES_USER=${DBUSER?Variable not set}
+            - POSTGRES_PASSWORD=${DBPASSWORD?Variable not set}
+            - POSTGRES_INITDB_ARGS='--encoding=UTF-8'
+        expose:
+            - "5432:5432"
+        restart: always
+        networks:
+            - ohm_network
+
+    # userdb:
+    #     build:
+    #         context: ./backend
+    #         dockerfile: ./backend/compose/dev/db/Dockerfile
+    #     image: ohm_user_db
+    #     container_name: user_db
+    #     volumes:
+    #         - db_user_data:/var/lib/postgresql/data
+    #         - db_user_data_backups:/backups
+    #     environment:
+    #         POSTGRES_DB: $DBNAME
+    #         POSTGRES_USER: $DBUSER
+    #         POSTGRES_PASSWORD: $DBPASSWORD
+    #         POSTGRES_INITDB_ARGS: '--encoding=UTF-8'
+    #     expose:
+    #         - "5433:5432"
+    #     restart: always
+    #     networks:
+    #         - ohm_network
+
+    # tenant1_db:
+    #     build:
+    #         context: ./backend
+    #         dockerfile: ./backend/compose/dev/db/Dockerfile
+    #     image: ohm_tenant1_db
+    #     container_name: tenant1_db
+    #     volumes:
+    #         - db_tenant1_data:/var/lib/postgresql/data
+    #         - db_tenant1_data_backups:/backups
+    #     environment:
+    #         POSTGRES_DB: $DBNAME
+    #         POSTGRES_USER: $DBUSER
+    #         POSTGRES_PASSWORD: $DBPASSWORD
+    #         POSTGRES_INITDB_ARGS: '--encoding=UTF-8'
+    #     expose:
+    #         - "5434:5432"
+    #     restart: always
+    #     networks:
+    #         - ohm_network
+
+    # tenant2_db:
+    #     build:
+    #         context: ./backend
+    #         dockerfile: ./backend/compose/dev/db/Dockerfile
+    #     image: ohm_tenant2_db
+    #     container_name: tenant2_db
+    #     volumes:
+    #         - db_tenant2_data:/var/lib/postgresql/data
+    #         - db_tenant2_data_backups:/backups
+    #     environment:
+    #         POSTGRES_DB: $DBNAME
+    #         POSTGRES_USER: $DBUSER
+    #         POSTGRES_PASSWORD: $DBPASSWORD
+    #         POSTGRES_INITDB_ARGS: '--encoding=UTF-8'
+    #     expose:
+    #         - "5435:5432"
+    #     restart: always
+    #     networks:
+    #         - ohm_network
+
+    # cache:
+    #     build:
+    #         context: .
+    #         dockerfile: ./compose/dev/cache/Dockerfile
+    #     image: ohm_core_cache
+    #     env_file:
+    #         - ./.envs/.dev/.redis.v1
+    #     sysctls:
+    #         net.core.somaxconn: '511'
+    #     restart: always

@@ -48,12 +48,21 @@ Thumbs.db
 *.mov
 *.wmv
 
+# AWS stuff
 .aws-sam/*
 samconfig.toml
-
 package/
 artifact*
 *.zip
-
 .*c9*
+
+# Python stuff
+__pycache__
+app.egg-info
+*.pyc
+.mypy_cache
+.coverage
+htmlcov
+.cache
+.venv
 
