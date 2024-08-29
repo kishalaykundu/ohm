@@ -28,11 +28,18 @@ FROM base AS build
 ARG HOME_FOLDER=compose/app
 
     # pip settings
-ENV PIP_NO_CACHE_DIR=off \
-    PIP_DISABLE_PIP_VERSION_CHECK=on \
-    PIP_DEFAULT_TIMEOUT=100 \
-    # make poetry install to this location
-    POETRY_HOME=/opt/poetry \
+# ENV PIP_NO_CACHE_DIR=off \
+#     PIP_DISABLE_PIP_VERSION_CHECK=on \
+#     PIP_DEFAULT_TIMEOUT=100 \
+#     # make poetry install to this location
+#     POETRY_HOME=/opt/poetry \
+#     # specify poetry virtual env path
+#     POETRY_VIRTUALENVS_PATH=${VENV_PATH} \
+#     # do not ask any interactive question
+#     POETRY_NO_INTERACTION=1
+
+    # set poetry install location
+ENV POETRY_HOME=/opt/poetry \
     # specify poetry virtual env path
     POETRY_VIRTUALENVS_PATH=${VENV_PATH} \
     # do not ask any interactive question

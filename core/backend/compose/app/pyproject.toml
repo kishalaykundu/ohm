@@ -6,22 +6,23 @@ authors = ["Kishalay Kundu <kishalay.kundu@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.12"
+argon2-cffi = "^23"
 fastapi = {extras = ["standard"], version = "^0.112"}
-SqlAlchemy = "^2.0"
+jinja2 = "^3.1.4"
 psycopg = {extras = ["c"], version = "^3.2"}
 psycopg-pool = "^3.2"
-argon2-cffi = "^23"
-pyjwt = "^2.8.0"
-jinja2 = "^3.1.4"
 pyotp = "^2.9"
+pydantic-settings = "^2.4"
+pyjwt = "^2.8.0"
 qrcode = "^7.4"
+SqlAlchemy = "^2.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.2"
-mypy = "^1.11.2"
-ruff = "^0.6.2"
-pre-commit = "^3.8.0"
 coverage = "^7.6.1"
+mypy = "^1.11.2"
+pre-commit = "^3.8.0"
+pytest = "^8.3.2"
+ruff = "^0.6.2"
 
 [build-system]
 requires = ["poetry>=1.8.3"]
@@ -33,3 +34,25 @@ exclude = ["venv", ".venv"]
 
 [tool.ruff]
 target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "B",  # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+    "ARG001", # unused arguments in functions
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "W191",  # indentation contains tabs
+    "B904",  # Allow raising exceptions without from e, for HTTPException
+]
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`.
+keep-runtime-typing = true

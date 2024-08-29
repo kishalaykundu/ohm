@@ -32,11 +32,11 @@ build:
 	docker build -t ohm_core:latest .
 
 # target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devup (creates & runs app/db/cache in dev)
-devup:
-	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f docker-compose.dev.yaml up
+local:
+	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f docker-compose.local.yaml up
 
 # target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devdb (creates & runs app/db/cache in dev)
-devdb:
+localdb:
 	docker compose db psql --dbname=$(DB) --username=$(DBUSER) --password=$(DBPASS)
 
 # target: make up (creates & runs app in production)
