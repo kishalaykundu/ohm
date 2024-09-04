@@ -3,33 +3,21 @@
 # The ohm_core app is the only app where the db-volumes and network are NOT designated as
 # 'external'.  This is because they are initialized by ohm_core.  The ohm_tenant app must
 # designate its db-volumes and network as 'external', as it is the user, not the creator.
-# Usage: DBPASSWORD=<strong password> docker compose
+# Usage: Check Makefile (make help)
 #########################################################################################
 
 volumes:
     db_admin_data:
         name: ohm_admin_db
         driver: local
-    db_admin_data_backups:
-        name: ohm_admin_db_backups
+    db_user_data:
+        name: ohm_user_db
         driver: local
-    # db_user_data:
-    #     name: ohm_user_db
-    #     driver: local
-    # db_user_data_backups:
-    #     name: ohm_user_db_backups
-    #     driver: local
     # db_tenant1_data:
     #     name: ohm_tenant1_db
     #     driver: local
-    # db_tenant1_data_backups:
-    #     name: ohm_tenant1_db_backups
-    #     driver: local
     # db_tenant2_data:
     #     name: ohm_tenant2_db
-    #     driver: local
-    # db_tenant2_data_backups:
-    #     name: ohm_tenant2_db_backups
     #     driver: local
 networks:
     ohm_network:
@@ -44,16 +32,19 @@ services:
         image: 'ohm_core:${TAG-latest}'
         depends_on:
             - admindb
-            # - userdb
+            - userdb
             # - tenant1_db
             # - tenant2_db
             # - cache
         volumes:
             - ./app:/app
         environment:
-            - ADMINDBNAME=${DBNAME?Variable not set}
+            - ADMINDB=${DB?Variable not set}
             - ADMINDBUSER=${DBUSER?Variable not set}
             - ADMINDBPASS=${DBPASS?Variable not set}
+            - USERDB=${USERDB?Variable not set}
+            - USERDBUSER=${DBUSER?Variable not set}
+            - USERDBPASS=${DBPASS?Variable not set}
         ports:
             - "1337:8080"
         restart: always
@@ -62,17 +53,15 @@ services:
             - ohm_network
 
     admindb:
-        build:
-            context: ./backend
-            dockerfile: compose/dev/db/Dockerfile
-        image: ohm_admin_db
+        image: postgres:16
         container_name: admin_db
         volumes:
-            - db_admin_data:/var/lib/postgresql/data
-            - db_admin_data_backups:/backups
+            - db_admin_data:/var/lib/postgresql/data/pgdata
+            - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+            # - ./backend/db/admin/tables.sql:/docker-entrypoint-initdb.d/tables.sql
         environment:
             - PGDATA=/var/lib/postgresql/data/pgdata
-            - POSTGRES_DB=${DBNAME?Variable not set}
+            - POSTGRES_DB=${DB?Variable not set}
             - POSTGRES_USER=${DBUSER?Variable not set}
             - POSTGRES_PASSWORD=${DBPASS?Variable not set}
             - POSTGRES_INITDB_ARGS='--encoding=UTF-8'
@@ -82,25 +71,24 @@ services:
         networks:
             - ohm_network
 
-    # userdb:
-    #     build:
-    #         context: ./backend
-    #         dockerfile: ./backend/compose/dev/db/Dockerfile
-    #     image: ohm_user_db
-    #     container_name: user_db
-    #     volumes:
-    #         - db_user_data:/var/lib/postgresql/data
-    #         - db_user_data_backups:/backups
-    #     environment:
-    #         POSTGRES_DB: $DBNAME
-    #         POSTGRES_USER: $DBUSER
-    #         POSTGRES_PASSWORD: $DBPASSWORD
-    #         POSTGRES_INITDB_ARGS: '--encoding=UTF-8'
-    #     expose:
-    #         - "5433:5432"
-    #     restart: always
-    #     networks:
-    #         - ohm_network
+    userdb:
+        image: postgres:16
+        container_name: user_db
+        volumes:
+            - db_user_data:/var/lib/postgresql/data/pgdata
+            - ./backend/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+            # - ./backend/db/users/tables.sql:/docker-entrypoint-initdb.d/tables.sql
+        environment:
+            - PGDATA=/var/lib/postgresql/data/pgdata
+            - POSTGRES_DB=${USERDB?Variable not set}
+            - POSTGRES_USER=${USERDBUSER?Variable not set}
+            - POSTGRES_PASSWORD=${USERDBPASS?Variable not set}
+            - POSTGRES_INITDB_ARGS='--encoding=UTF-8'
+        expose:
+            - "5433:5432"
+        restart: always
+        networks:
+            - ohm_network
 
     # tenant1_db:
     #     build:
@@ -110,7 +98,6 @@ services:
     #     container_name: tenant1_db
     #     volumes:
     #         - db_tenant1_data:/var/lib/postgresql/data
-    #         - db_tenant1_data_backups:/backups
     #     environment:
     #         POSTGRES_DB: $DBNAME
     #         POSTGRES_USER: $DBUSER
@@ -130,7 +117,6 @@ services:
     #     container_name: tenant2_db
     #     volumes:
     #         - db_tenant2_data:/var/lib/postgresql/data
-    #         - db_tenant2_data_backups:/backups
     #     environment:
     #         POSTGRES_DB: $DBNAME
     #         POSTGRES_USER: $DBUSER

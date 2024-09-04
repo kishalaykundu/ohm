@@ -2,7 +2,7 @@ from pydantic_core import MultiHostUrl
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine
 
-class Settings(BaseSettings):
+class Configuration(BaseSettings):
     API_V1_STR: str = '/api/v1'
     DOMAIN: str = 'localhost'
     ENVIRONMENT: Literal['local', 'dev', 'live'] = 'local'
@@ -51,4 +51,4 @@ class Settings(BaseSettings):
             port=self.USER_POSTGRES_PORT,
         )
 
-settings = Settings()  # type: ignore
+config = Configuration()  # type: ignore

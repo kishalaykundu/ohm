@@ -11,8 +11,10 @@ ENV PYTHONUNBUFFERED=1 \
     # add app directory to python path
     PYTHONPATH=/app \
     # common environment paths
-    PYSETUP_PATH=/opt/pysetup \
-    VENV_FOLDER=py312
+    PYSETUP_PATH=/opt/pysetup
+
+# IMPORTANT: DO NOT CHANGE (poetry uses this by default)
+ARG VENV_FOLDER=.venv
 
 # Prepend virtual env path to path
 ENV VENV_PATH=${PYSETUP_PATH}/${VENV_FOLDER}
@@ -28,20 +30,13 @@ FROM base AS build
 ARG HOME_FOLDER=compose/app
 
     # pip settings
-# ENV PIP_NO_CACHE_DIR=off \
-#     PIP_DISABLE_PIP_VERSION_CHECK=on \
-#     PIP_DEFAULT_TIMEOUT=100 \
-#     # make poetry install to this location
-#     POETRY_HOME=/opt/poetry \
-#     # specify poetry virtual env path
-#     POETRY_VIRTUALENVS_PATH=${VENV_PATH} \
-#     # do not ask any interactive question
-#     POETRY_NO_INTERACTION=1
-
-    # set poetry install location
-ENV POETRY_HOME=/opt/poetry \
-    # specify poetry virtual env path
-    POETRY_VIRTUALENVS_PATH=${VENV_PATH} \
+ENV PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100 \
+    # make poetry install to this location
+    POETRY_HOME=/opt/poetry \
+    # make poetry create the virtual environment in the project's root, named `.venv`
+    POETRY_VIRTUALENVS_IN_PROJECT=true \
     # do not ask any interactive question
     POETRY_NO_INTERACTION=1
 

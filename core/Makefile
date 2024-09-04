@@ -8,36 +8,51 @@ all:
 help:
 	grep -E "^# target:" [Mm]akefile
 
-# target: make start (initalizes docker daemon if not started)
-start:
+# called by start
+start_docker:
 	sudo systemctl start docker
 
-# target: make add_to_group (this checks if the docker group exists in system and if not, creates it and adds user to docker group)
+# called by start
 add_to_group:
 	if [ $(getent group docker) ]; then \
 		sudo groupadd docker; \
-		sudo usermod -aG docker $(USER); \
+		sudo usermod -aG docker ${USER}; \
 	else \
-		sudo usermod -aG docker $(USER); \
+		sudo usermod -aG docker ${USER}; \
 	fi; \
 	newgrp docker
 
-# target: make init (starts docker daemon and adds user to docker group, sequentially runs 'make init' & 'make add_to_group')
-init: start
+# called by init
+start: start_docker
 	make add_to_group
+
+# called by init
+docker_login:
 	docker login
+
+# target: make init
+# target: (starts docker daemon , adds user to docker group & login to docker, sequentially runs 'make start' & 'make docker_login')
+init:
+	make start && make docker_login
 
 # target: make build (uses docker,instead of docker compose to build app image)
 build:
 	docker build -t ohm_core:latest .
 
-# target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devup (creates & runs app/db/cache in dev)
+# target: DB=<admindb-name> DBUSER=<admindb-user> DBPASS=<admindb-password> USERDB=<userdb-name> USERDBUSER=<userdb-user>
+# target: USERDBPASS=<userdb-password> make local (creates & runs app/db/cache in local)
 local:
-	DBNAME=$(DB) DBUSER=$(DBUSER) DBPASSWORD=$(DBPASS) docker compose -f docker-compose.local.yaml up
+	DB=${DB} DBUSER=${DBUSER} DBPASS=${DBPASS} USERDB=${USERDB} USERDBUSER=${USERDBUSER} USERDBPASS=${USERDBPASS} \
+		docker compose -f docker-compose.local.yaml up
 
-# target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make devdb (creates & runs app/db/cache in dev)
+# target: DB=<dbname> DBUSER=<admin-name> DBPASS=<password> make localdb (creates & runs app/db/cache in dev)
 localdb:
-	docker compose db psql --dbname=$(DB) --username=$(DBUSER) --password=$(DBPASS)
+	docker compose db psql --dbname=${DB} --username=${DBUSER} --password=${DBPASS}
+
+# target: DB=${DB} DBUSER=${DBUSER} DBPASS=${DBPASS} make runsql FILE=<sql-file-with-relative-pathname> DBCONTAINER=<db-container-name>
+runsql:
+	docker cp ${FILE} {DBCONTAINER}:/file.sql \
+	&& docker exec -u ${DBUSER} ${DBCONTAINER}  psql ${DB} ${DBUSER} /file.sql
 
 # target: make up (creates & runs app in production)
 up:
