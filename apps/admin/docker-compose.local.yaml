@@ -39,12 +39,12 @@ services:
         volumes:
             - ./app:/app
         environment:
-            - ADMINDB=${DB?Variable not set}
-            - ADMINDBUSER=${DBUSER?Variable not set}
-            - ADMINDBPASS=${DBPASS?Variable not set}
-            - USERDB=${USERDB?Variable not set}
-            - USERDBUSER=${DBUSER?Variable not set}
-            - USERDBPASS=${DBPASS?Variable not set}
+            - ADMIN_DB=${DB?Variable not set}
+            - ADMIN_DBUSER=${DBUSER?Variable not set}
+            - ADMIN_DBPASS=${DBPASS?Variable not set}
+            - USER_DB=${USERDB?Variable not set}
+            - USER_DBUSER=${DBUSER?Variable not set}
+            - USER_DBPASS=${DBPASS?Variable not set}
         ports:
             - "1337:8080"
         restart: always
@@ -54,6 +54,7 @@ services:
 
     admindb:
         image: postgres:16
+        hostname: admindb
         container_name: admin_db
         volumes:
             - db_admin_data:/var/lib/postgresql/data/pgdata
@@ -73,6 +74,7 @@ services:
 
     userdb:
         image: postgres:16
+        hostname: userdb
         container_name: user_db
         volumes:
             - db_user_data:/var/lib/postgresql/data/pgdata

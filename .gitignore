@@ -57,12 +57,11 @@ artifact*
 .*c9*
 
 # Python stuff
-__pycache__
+**/*__pycache__
 app.egg-info
-*.pyc
+**/*.pyc
 .mypy_cache
 .coverage
 htmlcov
 .cache
 .venv
-
